@@ -1,4 +1,4 @@
-# homework-of-Computer-vision-CS231n
+# CS231n(Spring 2018) Assignment Solutions
 
 Assignment Solutions of Computer vision CS231n(Spring 2018)
 
