@@ -3,6 +3,7 @@
 Assignment Solutions of Computer vision CS231n(Spring 2018)
 
 [cs231n of Stanford University(Spring 2017)](https://www.youtube.com/watch?v=vT1JzLTH4G4&list=PLC1qU-LWwrF64f4QKQT-Vg5Wr4qEE1Zxk&index=1)
+
 [cs231n Assignment Page(Spring 2018)](http://cs231n.stanford.edu/syllabus.html)
 
 **Assignment 1**
