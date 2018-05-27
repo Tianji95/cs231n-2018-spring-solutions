@@ -89,7 +89,7 @@ DropConnect,
 Fractional Max Pooling,
 Stochastic Depth,
 
-##assignment1 note
+## assignment1 note
 
 **配置环境**
 
