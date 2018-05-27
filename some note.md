@@ -89,11 +89,10 @@ DropConnect,
 Fractional Max Pooling,
 Stochastic Depth,
 
-10. 
-
 ##assignment1 note
 
 **配置环境**
+
 首先是配置环境（我是windows系统），下载完代码以后windows系统需要执行下面的命令（没有安装python环境的需要安装python环境，建议安装python3.6）：
     
     pip install ipython
@@ -111,10 +110,14 @@ Stochastic Depth,
 
 执行到第6的代码块的时候，需要自己实现KNearestNeighbor
 
-[这里](https://github.com/Tianji95/CS231n-Assignment-Solutions-Spring-2018/blob/master/assignment1/cs231n/classifiers/k_nearest_neighbor.py)是我的代码
+[这里](https://github.com/Tianji95/CS231n-Assignment-Solutions-Spring-2018/blob/master/assignment1/cs231n/classifiers/k_nearest_neighbor.py)和
+[这里](https://github.com/Tianji95/CS231n-Assignment-Solutions-Spring-2018/blob/master/assignment1/knn.py)是我的代码
+
+另外ipython文件最好用ipython notebook打开，上面的knn.py只是我导出的一个py文件
 
 
 **写代码过程中的笔记**
+
 1. data_utils里面可以看出他们对源数据做了Normalize，具体在get_CIFAR10_data里面实现
 2. KNN的two就不说了，one loop需要注意sum的时候axis=1，要不然加起来矩阵的方向是反的，no loop需要稍微思考一下矩阵运算，这里主要是要会用numpy的broadcast sum
 + [这里是broadcast sum的官方文档](https://docs.scipy.org/doc/numpy-1.13.0/user/basics.broadcasting.html)
