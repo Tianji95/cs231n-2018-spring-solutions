@@ -69,7 +69,7 @@ class TwoLayerNet(object):
     N, D = X.shape
 
     # Compute the forward pass
-    scores = None
+    scores = np.maximum(X.dot(W1) + b1.T, 0).dot(W2) + b2.T
     #############################################################################
     # TODO: Perform the forward pass, computing the class scores for the input. #
     # Store the result in the scores variable, which should be an array of      #
@@ -85,7 +85,11 @@ class TwoLayerNet(object):
       return scores
 
     # Compute the loss
-    loss = None
+    exp_sum = np.sum(np.exp(scores), axis = 1).reshape(-1,1)
+
+    correct_class_score = scores[range(N), y].reshape(-1,1)
+    loss = np.sum(np.log(exp_sum) - correct_class_score)
+    loss = loss / N + reg * (np.sum(W1 * W1)+np.sum(W2 * W2))
     #############################################################################
     # TODO: Finish the forward pass, and compute the loss. This should include  #
     # both the data loss and L2 regularization for W1 and W2. Store the result  #
@@ -99,6 +103,13 @@ class TwoLayerNet(object):
 
     # Backward pass: compute gradients
     grads = {}
+
+    needAdd = np.exp(scores) / exp_sum
+    needAdd[range(N), y] -= 1 
+
+    grads['W2'] = (np.maximum(X.dot(W1) + b1.T, 0)).dot(needAdd) / N + reg * W2
+    grads['W1'] = (X.T).dot(needAdd) / N + reg * W1
+
     #############################################################################
     # TODO: Compute the backward pass, computing the derivatives of the weights #
     # and biases. Store the results in the grads dictionary. For example,       #
