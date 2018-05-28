@@ -89,6 +89,9 @@ DropConnect,
 Fractional Max Pooling,
 Stochastic Depth,
 
+
+**写代码过程中的笔记**
+
 ## assignment1 note
 
 **配置环境**
@@ -106,17 +109,17 @@ Stochastic Depth,
 
 进入到浏览器界面，打开knn.ipynb文件，依次执行代码（中间遇到报错的需要自己依次解决）
 
-比如我自己下载的CIFAR-10文件路径不对，这里就需要根据打开的 cs231n\datasets\get_datasets.sh 文件中具体的路径（我这里是http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz）下载解压，放到dataset文件夹下面
+比如我自己下载的CIFAR-10文件路径不对，这里就需要根据打开的 cs231n\datasets\get_datasets.sh 文件中具体的路径, 我这里是[http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz](http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)下载解压，放到dataset文件夹下面
 
 执行到第6的代码块的时候，需要自己实现KNearestNeighbor
 
+
+**KNN**
+
 [这里](https://github.com/Tianji95/CS231n-Assignment-Solutions-Spring-2018/blob/master/assignment1/cs231n/classifiers/k_nearest_neighbor.py)和
-[这里](https://github.com/Tianji95/CS231n-Assignment-Solutions-Spring-2018/blob/master/assignment1/knn.py)是我的代码
+[这里](https://github.com/Tianji95/CS231n-Assignment-Solutions-Spring-2018/blob/master/assignment1/knn.py)是我的KNN代码
 
 另外ipython文件最好用ipython notebook打开，上面的knn.py只是我导出的一个py文件
-
-
-**写代码过程中的笔记**
 
 1. data_utils里面可以看出他们对源数据做了Normalize，具体在get_CIFAR10_data里面实现
 2. KNN的two就不说了，one loop需要注意sum的时候axis=1，要不然加起来矩阵的方向是反的，no loop需要稍微思考一下矩阵运算，这里主要是要会用numpy的broadcast sum
@@ -124,3 +127,15 @@ Stochastic Depth,
 + [以及一个Stack Overflow](https://stackoverflow.com/questions/27948363/numpy-broadcast-to-perform-euclidean-distance-vectorized?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa)
 3. predict_labels里面要注意bincount和argmax的使用
 4. 代码截图见assignment1/screenshot目录
+5. validation：要让每个folder都有机会成为validation，所以循环中要拼接所有不是validation的folder，让他们成为train set 
+
+
+**linear SVM**
+
+1. 因为是多分类的svm，所以具体的做法需要回溯到lecture 3，里面讲了如何确定w矩阵,具体主要是难在如何确定dw，对svm公式求偏导， 参见[官方笔记](http://cs231n.github.io/optimization-1/)，即当出现偏差的时候偏导数为xi，没有偏差的时候偏导数为0，而当i和j相等的时候有偏差为所有不等于i的-xi的和
+
+2. 向量化的svm计算方式和前面相同，只不过需要把需要加上的偏导数换成矩阵运算
+
+**SoftMax**
+
+1. 和SVM一样，主要难点在于如何确定dw，以及多了一点就是确保稳定性，参见[官方笔记](http://cs231n.github.io/linear-classify/#softmax)
