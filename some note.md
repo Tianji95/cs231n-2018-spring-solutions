@@ -139,3 +139,7 @@ Stochastic Depth,
 **SoftMax**
 
 1. 和SVM一样，主要难点在于如何确定dw，以及多了一点就是确保稳定性，参见[官方笔记](http://cs231n.github.io/linear-classify/#softmax)
+
+**Neural  Network**
+
+1. 这里真的需要自己推一边偏导数了，grad的计算一直都是比较难的，自己推一遍 softmax(Relu(W1 * X + b1) * W2 + b2)对w和b的偏导数，计算起来就会顺手很多
