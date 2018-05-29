@@ -69,7 +69,8 @@ class TwoLayerNet(object):
     N, D = X.shape
 
     # Compute the forward pass
-    scores = np.maximum(X.dot(W1) + b1.T, 0).dot(W2) + b2.T
+    hidden_layer = np.maximum(X.dot(W1) + b1.T, 0)
+    scores = hidden_layer.dot(W2) + b2.T
     #############################################################################
     # TODO: Perform the forward pass, computing the class scores for the input. #
     # Store the result in the scores variable, which should be an array of      #
@@ -104,11 +105,18 @@ class TwoLayerNet(object):
     # Backward pass: compute gradients
     grads = {}
 
-    needAdd = np.exp(scores) / exp_sum
-    needAdd[range(N), y] -= 1 
+    out_score = np.exp(scores) / exp_sum
+    out_score[range(N), y] -= 1 
 
-    grads['W2'] = (np.maximum(X.dot(W1) + b1.T, 0)).dot(needAdd) / N + reg * W2
-    grads['W1'] = (X.T).dot(needAdd) / N + reg * W1
+    grads['W2'] = hidden_layer.dot(out_score) / N + reg * W2
+    grads['b2'] = np.sum(out_score, axis=0) + reg * b2  # np.ones(b2.shape) + reg * b2,因为之后需要用softmax，所以偏导数并不是1，而是softmax对b的偏导数
+    
+    hidden_score = out_score.dot(W2.T)
+    hidden_score[hidden_layer < 0] = 0
+
+
+    grads['W1'] = (X.T).dot(hidden_score) / N + reg * W1
+    grads['b1'] = np.sum(hidden_score, axis = 0)
 
     #############################################################################
     # TODO: Compute the backward pass, computing the derivatives of the weights #
