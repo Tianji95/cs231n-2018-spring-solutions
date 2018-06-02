@@ -143,3 +143,4 @@ Stochastic Depth,
 **Neural  Network**
 
 1. 这里真的需要自己推一边偏导数了，grad的计算一直都是比较难的，自己推一遍 softmax(Relu(W1 * X + b1) * W2 + b2)对w和b的偏导数，计算起来就会顺手很多
+2. loss那里，因为有W1和W2两个W，所以在计算正则化的时候一定不要忘记乘上0.5！！！！！巨坑

@@ -69,12 +69,14 @@ class TwoLayerNet(object):
     N, D = X.shape
 
     # Compute the forward pass
-    hidden_layer = np.maximum(X.dot(W1) + b1.T, 0)
-    scores = hidden_layer.dot(W2) + b2.T
+    hidden_layer = np.maximum(X.dot(W1) + b1, 0)
+    scores = hidden_layer.dot(W2) + b2
+
+    shift_scores = scores - np.max(scores, axis = 1).reshape(-1,1)
     #############################################################################
     # TODO: Perform the forward pass, computing the class scores for the input. #
     # Store the result in the scores variable, which should be an array of      #
-    # shape (N, C).                                                             #
+    # shape (N, C).                                                             # 
     #############################################################################
     pass
     #############################################################################
@@ -86,11 +88,9 @@ class TwoLayerNet(object):
       return scores
 
     # Compute the loss
-    exp_sum = np.sum(np.exp(scores), axis = 1).reshape(-1,1)
-
-    correct_class_score = scores[range(N), y].reshape(-1,1)
-    loss = np.sum(np.log(exp_sum) - correct_class_score)
-    loss = loss / N + reg * (np.sum(W1 * W1)+np.sum(W2 * W2))
+    softmax_output = np.exp(shift_scores)/np.sum(np.exp(shift_scores), axis = 1).reshape(-1,1)
+    loss = -np.sum(np.log(softmax_output[range(N), list(y)]))
+    loss = loss / N + 0.5 * reg * (np.sum(W1 * W1)+np.sum(W2 * W2))           #这里的0.5不要忘记了啊啊啊啊啊啊啊 
     #############################################################################
     # TODO: Finish the forward pass, and compute the loss. This should include  #
     # both the data loss and L2 regularization for W1 and W2. Store the result  #
@@ -104,18 +104,18 @@ class TwoLayerNet(object):
 
     # Backward pass: compute gradients
     grads = {}
+    
 
-    out_score = np.exp(scores) / exp_sum
+    out_score = softmax_output.copy()
     out_score[range(N), y] -= 1 
-
-    grads['W2'] = hidden_layer.dot(out_score) / N + reg * W2
-    grads['b2'] = np.sum(out_score, axis=0) + reg * b2  # np.ones(b2.shape) + reg * b2,因为之后需要用softmax，所以偏导数并不是1，而是softmax对b的偏导数
+    out_score /=N
+    grads['W2'] = hidden_layer.T.dot(out_score) + reg * W2
+    grads['b2'] = np.sum(out_score, axis=0)# np.ones(b2.shape) + reg * b2,因为之后需要用softmax，所以偏导数并不是1，而是softmax对b的偏导数
     
     hidden_score = out_score.dot(W2.T)
-    hidden_score[hidden_layer < 0] = 0
+    hidden_score = (hidden_layer > 0) * hidden_score
 
-
-    grads['W1'] = (X.T).dot(hidden_score) / N + reg * W1
+    grads['W1'] = (X.T).dot(hidden_score) + reg * W1
     grads['b1'] = np.sum(hidden_score, axis = 0)
 
     #############################################################################
@@ -160,8 +160,10 @@ class TwoLayerNet(object):
     val_acc_history = []
 
     for it in range(num_iters):
-      X_batch = None
-      y_batch = None
+      indices = np.random.choice(num_train, batch_size)
+      X_batch = X[indices]
+      y_batch = y[indices]
+
 
       #########################################################################
       # TODO: Create a random minibatch of training data and labels, storing  #
@@ -176,6 +178,10 @@ class TwoLayerNet(object):
       loss, grads = self.loss(X_batch, y=y_batch, reg=reg)
       loss_history.append(loss)
 
+      self.params['W1'] -= grads['W1'] * learning_rate
+      self.params['b1'] -= grads['b1'] * learning_rate
+      self.params['W2'] -= grads['W2'] * learning_rate
+      self.params['b2'] -= grads['b2'] * learning_rate
       #########################################################################
       # TODO: Use the gradients in the grads dictionary to update the         #
       # parameters of the network (stored in the dictionary self.params)      #
@@ -222,8 +228,11 @@ class TwoLayerNet(object):
       the elements of X. For all i, y_pred[i] = c means that X[i] is predicted
       to have class c, where 0 <= c < C.
     """
-    y_pred = None
-
+    
+    W1, b1 = self.params['W1'], self.params['b1']
+    W2, b2 = self.params['W2'], self.params['b2']
+    y_hidden = np.maximum(X.dot(W1)+b1, 0)
+    y_pred = np.argmax(y_hidden.dot(W2) + b2, axis=1) 
     ###########################################################################
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################

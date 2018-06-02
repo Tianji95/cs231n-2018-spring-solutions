@@ -8,11 +8,11 @@ Assignment Solutions of Computer vision CS231n(Spring 2018)
 
 **Assignment 1**
 
-1. k-Nearest Neighbor classifier 
-2. Training a Support Vector Machine
-3. Implement a Softmax classifier
-4. Two-Layer Neural Network
-5. Higher Level Representations: Image Features
+1. k-Nearest Neighbor classifier (done!)
+2. Training a Support Vector Machine(done!)
+3. Implement a Softmax classifier(done!)
+4. Two-Layer Neural Network(done!)
+5. Higher Level Representations: Image Features(done!)
 
 **Assignment 2**
 
