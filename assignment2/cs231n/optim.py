@@ -59,8 +59,10 @@ def sgd_momentum(w, dw, config=None):
     config.setdefault('learning_rate', 1e-2)
     config.setdefault('momentum', 0.9)
     v = config.get('velocity', np.zeros_like(w))
+    
 
-    next_w = None
+    v = config['momentum'] * v - config['learning_rate'] * dw
+    next_w = w + v
     ###########################################################################
     # TODO: Implement the momentum update formula. Store the updated value in #
     # the next_w variable. You should also use and update the velocity v.     #
@@ -93,7 +95,15 @@ def rmsprop(w, dw, config=None):
     config.setdefault('epsilon', 1e-8)
     config.setdefault('cache', np.zeros_like(w))
 
+
     next_w = None
+
+    cache = config['decay_rate'] * config['cache'] + (1 - config['decay_rate']) * dw * dw
+    next_w = w - config['learning_rate'] * dw / (np.sqrt(cache) + config['epsilon'])
+    config['cache'] = cache
+    # dx = compute_gradient(x)
+    # grad_squared = decay_rate * grad_squared + (1 - decay_rate) * dx * dx
+    # x -= learning_rate * dx / (np.sqrt(grad_squared) + 1e-7)
     ###########################################################################
     # TODO: Implement the RMSprop update formula, storing the next value of w #
     # in the next_w variable. Don't forget to update cache value stored in    #
@@ -131,6 +141,26 @@ def adam(w, dw, config=None):
     config.setdefault('t', 0)
 
     next_w = None
+    config['t'] += 1
+    m = config['beta1'] * config['m'] + (1 - config['beta1']) * dw
+    v = config['beta2'] * config['v'] + (1 - config['beta2']) * dw * dw
+    first_unbias  = m / (1 - np.power(config['beta1'], config['t']))
+    second_unbias = v / (1 - np.power(config['beta2'], config['t']))
+
+    next_w = w - config['learning_rate'] * first_unbias / (np.sqrt(second_unbias) + config['epsilon'])
+    config['m'] = m
+    config['v'] = v
+    
+    # first_moment  = 0
+    # second_moment = 0
+    # beta1 = beta2 = 0.99或者其他接近于1的数字
+    # while True:
+    #     dx = compute_gradient(x)
+    #     first_moment  = beta1 * first_moment + (1 - beta1) * dx //momentum
+    #     second_moment = beta2 * second_moment + (1 - beta2) * dx * dx       //adaGrad /RMSProp
+    #     first_unbias  = first_moment / (1 - beta1 ** t)
+    #     second_unbias = second_moment / (1 - beta2 **t) //Bias correction, 
+    #     x -= learning_rate * first_moment / (np.sqrt(second_moment) + 1e-7)
     ###########################################################################
     # TODO: Implement the Adam update formula, storing the next value of w in #
     # the next_w variable. Don't forget to update the m, v, and t variables   #

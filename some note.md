@@ -29,8 +29,8 @@
     vx = 0
     while True:
         dx = compute_gradient(x)
-        vx = rho * vs + dx
-        x += learning_rate * vx
+        vx = rho * vx + dx * learning_rate
+        x += vx
 
 Nesterov Momentum:
     dx    = compute_gradient(x)
@@ -74,11 +74,12 @@ Adam(full form)：
     second_moment = 0
     beta1 = beta2 = 0.99或者其他接近于1的数字
     while True:
+        t += 1
         dx = compute_gradient(x)
         first_moment  = beta1 * first_moment + (1 - beta1) * dx //momentum
         second_moment = beta2 * second_moment + (1 - beta2) * dx * dx       //adaGrad /RMSProp
-        first_unbias  = first_moment / (1 - beta1 ** t)
-        second_unbias = second_moment / (1 - beta2 **t) //Bias correction, 
+        first_unbias  = first_moment / (1 - beta1 ^ t)
+        second_unbias = second_moment / (1 - beta2 ^ t) //Bias correction, 
         x -= learning_rate * first_moment / (np.sqrt(second_moment) + 1e-7)
 
 9. dropout : 防止过拟合，将网络中的一些节点随机拿掉，类似的还有：
