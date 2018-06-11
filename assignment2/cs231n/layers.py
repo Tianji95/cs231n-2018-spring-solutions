@@ -166,6 +166,13 @@ def batchnorm_forward(x, gamma, beta, bn_param):
 
     out, cache = None, None
     if mode == 'train':
+        sample_mean = np.sum(x, axis = 0) / N
+        sample_var  = np.var(x, axis = 0)
+        running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+        running_var = momentum * running_var + (1 - momentum) * sample_var
+        x_ba = (x - sample_mean) / (np.sqrt(sample_var + eps))
+        out = gamma * x_ba + beta
+        cache = (gamma, beta, eps, sample_mean, sample_var, x, x_ba)
         #######################################################################
         # TODO: Implement the training-time forward pass for batch norm.      #
         # Use minibatch statistics to compute the mean and variance, use      #
@@ -192,6 +199,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #                           END OF YOUR CODE                          #
         #######################################################################
     elif mode == 'test':
+        out = gamma * ((x - running_mean) / (np.sqrt(running_var + eps))) + beta
         #######################################################################
         # TODO: Implement the test-time forward pass for batch normalization. #
         # Use the running mean and variance to normalize the incoming data,   #
@@ -230,6 +238,17 @@ def batchnorm_backward(dout, cache):
     - dbeta: Gradient with respect to shift parameter beta, of shape (D,)
     """
     dx, dgamma, dbeta = None, None, None
+    gamma, beta, eps, sample_mean, sample_var, x, x_ba = cache
+    N, D = x.shape
+
+    dgamma = np.sum(x_ba * dout, axis = 0)
+    dbeta  = np.sum(dout, axis = 0)
+    
+    dx_ba = dout * gamma
+    dvar  = np.sum(dx_ba * (x - sample_mean), axis = 0) * (-1.0/2.0) / (np.sqrt(sample_var + eps)*(sample_var + eps))
+    dmean = (np.sum(dx_ba, axis=0) * (-1.0) / (np.sqrt(sample_var + eps))) + dvar * np.sum(x - sample_mean, axis = 0) * (-2.0) / N
+    dx    = dx_ba / np.sqrt(sample_var + eps) + dvar * 2 * (x - sample_mean) / N + dmean / N
+
     ###########################################################################
     # TODO: Implement the backward pass for batch normalization. Store the    #
     # results in the dx, dgamma, and dbeta variables.                         #
