@@ -278,6 +278,16 @@ def batchnorm_backward_alt(dout, cache):
     Inputs / outputs: Same as batchnorm_backward
     """
     dx, dgamma, dbeta = None, None, None
+    gamma, beta, eps, sample_mean, sample_var, x, x_ba = cache
+    N, D = x.shape
+    dgamma = np.sum(x_ba * dout, axis = 0)
+    dbeta  = np.sum(dout, axis = 0)
+    
+    #from https://github.com/wjbKimberly/cs231n_spring_2017_assignment/blob/master/assignment2/cs231n/layers.py 这个化简我选择死亡。。。
+    dx = (1. / N) * gamma * (sample_var + eps) ** (-1. / 2.) * (N * dout - np.sum(dout, axis=0)- (x - sample_mean) * (sample_var + eps) ** (-1.0) * np.sum(dout * (x - sample_mean), axis=0))
+
+    
+
     ###########################################################################
     # TODO: Implement the backward pass for batch normalization. Store the    #
     # results in the dx, dgamma, and dbeta variables.                         #
