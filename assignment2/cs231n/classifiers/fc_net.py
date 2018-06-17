@@ -236,10 +236,14 @@ class FullyConnectedNet(object):
         if self.normalization=='batchnorm':
             for bn_param in self.bn_params:
                 bn_param['mode'] = mode
+        if self.normalization=='layernorm':
+            for bn_param in self.bn_params:
+                bn_param['mode'] = mode        
         scores = None
 
         layer_cache = {}
         layer_output = {}
+        do_cache = {}
 
         layer_input = X
         for i in range(self.num_layers - 1):
@@ -251,9 +255,19 @@ class FullyConnectedNet(object):
                                                               self.params['gamma' + str(i + 1)], 
                                                               self.params['beta' + str(i + 1)], 
                                                               self.bn_params[i])
+            elif self.normalization=='layernorm':
+                layer_out, lay_cache = affine_lyn_relu_forward(layer_input,  
+                                                              self.params['W'+str(i+1)], 
+                                                              self.params['b'+str(i+1)], 
+                                                              self.params['gamma' + str(i + 1)], 
+                                                              self.params['beta' + str(i + 1)], 
+                                                              self.bn_params[i])                                  
             else:
                 layer_out, lay_cache = affine_relu_forward(layer_input, self.params['W'+str(i+1)], self.params['b'+str(i+1)])
             
+            if self.use_dropout:
+                layer_out, do_cache[i] = dropout_forward(layer_out, self.dropout_param)
+
             layer_input = layer_out
             layer_cache[i] = lay_cache
             layer_output[i] = layer_out
@@ -294,9 +308,14 @@ class FullyConnectedNet(object):
         dout = dx
         for i in range(self.num_layers - 1):
             back_i = self.num_layers - i - 1
-
+            if self.use_dropout:
+                dout = dropout_backward(dout, do_cache[back_i - 1])
             if self.normalization == 'batchnorm':
                 dx, dw, db, dgamma, dbeta = affine_bn_relu_backward(dout, layer_cache[back_i - 1])
+                grads['gamma'+str(back_i)] = dgamma
+                grads['beta'+str(back_i)] = dbeta
+            elif self.normalization == 'layernorm':
+                dx, dw, db, dgamma, dbeta = affine_lyn_relu_backward(dout, layer_cache[back_i - 1])
                 grads['gamma'+str(back_i)] = dgamma
                 grads['beta'+str(back_i)] = dbeta
             else:
