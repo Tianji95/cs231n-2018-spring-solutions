@@ -38,11 +38,15 @@ class ThreeLayerConvNet(object):
         self.reg = reg
         self.dtype = dtype
 
-        self.params['W1'] = np.random.normal(0, weight_scale, (input_dim, hidden_dim, filter_size, filter_size))
+        C, H, W = input_dim
+        self.params['W1'] = np.random.normal(0, weight_scale, (num_filters, C, filter_size, filter_size))
         self.params['b1'] = np.zeros(num_filters)
-        self.params['W2'] = np.random.normal(0, weight_scale, (hidden_dim, num_classes, filter_size, filter_size))
+        # 1 + (H + 2 * pad - filter_size) / stride
+        # while pad = (filter_size - 1) // 2, stride = 1
+        # 1 + (H + 2 * (filter_size - 1) / 2 - filter_size) / 1 = H
+        self.params['W2'] = np.random.normal(0, weight_scale, (num_filters*H*W, hidden_dim))
         self.params['b2'] = np.zeros(hidden_dim)
-        self.params['W3'] = np.random.normal(0, weight_scale, (input_dim, hidden_dim))
+        self.params['W3'] = np.random.normal(0, weight_scale, (hidden_dim, num_classes))
         self.params['b3'] = np.zeros(num_classes)
         
 
@@ -96,6 +100,7 @@ class ThreeLayerConvNet(object):
         out, cache_list[0] = conv_relu_forward(X, W1, b1, conv_param)
         out, cache_list[1] = affine_forward(out, W2, b2)
         out, cache_list[2] = affine_forward(out, W3, b3)
+        scores = out
         ############################################################################
         # TODO: Implement the forward pass for the three-layer convolutional net,  #
         # computing the class scores for X and storing them in the scores          #
@@ -114,6 +119,7 @@ class ThreeLayerConvNet(object):
 
         loss, grads = 0, {}
         loss, dout = softmax_loss(out, y)
+        loss += reg * 0.5 *(np.sum(W1**2)+np.sum(W2**2)+np.sum(W3**2))
         dout, grads['W3'], grads['b3']  = affine_backward(dout, cache_list[2])
         dout, grads['W2'], grads['b2'] = affine_backward(dout, cache_list[1])
         dout, grads['W1'], grads['b1'] = conv_relu_backward(dout, cache_list[0])

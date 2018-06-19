@@ -691,7 +691,10 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     - cache: Values needed for the backward pass
     """
     out, cache = None, None
+    N, C, H, W = x.shape   
 
+    out, cache = batchnorm_forward(x.transpose(0, 3, 2, 1).reshape((N*H*W, C)), gamma, beta, bn_param)
+    out = out.reshape(N, W, H, C).transpose(0, 3, 2, 1)
     ###########################################################################
     # TODO: Implement the forward pass for spatial batch normalization.       #
     #                                                                         #
@@ -721,7 +724,9 @@ def spatial_batchnorm_backward(dout, cache):
     - dbeta: Gradient with respect to shift parameter, of shape (C,)
     """
     dx, dgamma, dbeta = None, None, None
-    
+    N, C, H, W = dout.shape
+    dx, dgamma, dbeta = batchnorm_backward_alt(dout.transpose(0, 3, 2, 1).reshape((N*W*H, C)), cache)
+    dx = dx.reshape(N, W, H, C).transpose(0, 3, 2, 1)
     ###########################################################################
     # TODO: Implement the backward pass for spatial batch normalization.      #
     #                                                                         #
@@ -758,6 +763,27 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     """
     out, cache = None, None
     eps = gn_param.get('eps',1e-5)
+    N, C, H, W = x.shape
+
+    group_number = C // G
+    group_mean_list = {}
+    group_var_list = {}
+    x_ba_list = {}
+    out = np.zeros((N*H*W, C))
+
+    for gp in range(group_number):
+        x_group = x[:, gp*G:(gp+1)*G, :, :].transpose(0, 3, 2, 1).reshape(N*W*H, G)
+        group_mean = np.mean(x_group, axis = 0)
+        group_var  = np.var(x_group,  axis = 0)
+        x_ba = (x_group - group_mean) / (np.sqrt(group_var + eps))
+        group_out  = gamma[:, gp*G:(gp+1)*G, :, :].reshape(G) * x_ba + beta[:, gp*G:(gp+1)*G, :, :].reshape(G)
+
+        group_mean_list[gp] = group_mean
+        group_var_list[gp]  = group_var
+        x_ba_list[gp]       = x_ba
+        out[:, gp*G:(gp+1)*G] = group_out
+    cache = (gamma, beta, eps, group_mean_list, group_var_list, x, x_ba_list, G)
+    out = out.reshape(N, W, H, C).transpose(0, 3, 2, 1)
     ###########################################################################
     # TODO: Implement the forward pass for spatial group normalization.       #
     # This will be extremely similar to the layer norm implementation.        #
@@ -786,7 +812,33 @@ def spatial_groupnorm_backward(dout, cache):
     - dbeta: Gradient with respect to shift parameter, of shape (C,)
     """
     dx, dgamma, dbeta = None, None, None
+    gamma, beta, eps, group_mean_list, group_var_list, x, x_ba_list, G = cache
+    N, C, H, W = x.shape
+    group_number = C // G
 
+    dgamma = np.zeros_like(gamma)
+    dbeta  = np.zeros_like(beta)
+    dx     = np.zeros_like(x)
+
+    for gp in range(group_number):
+        dout_group = dout[:, gp*G:(gp+1)*G, :, :]
+        x_ba_group = x_ba_list[gp]
+        mean_group = group_mean_list[gp]
+        var_group  = group_var_list[gp]
+
+        cache_group = (gamma[:, gp*G:(gp+1)*G, :, :].reshape(G), beta[:, gp*G:(gp+1)*G, :, :].reshape(G), eps, mean_group, var_group, x[:, gp*G:(gp+1)*G, :, :].transpose(0, 3, 2, 1).reshape((N*H*W, G)), x_ba_group)
+        dx[:, gp*G:(gp+1)*G, :, :], dgamma_temp, dbeta_temp = spatial_batchnorm_backward(dout_group, cache_group)
+        dgamma[:, gp*G:(gp+1)*G, :, :] = dgamma_temp.reshape((1, G, 1, 1))
+        dbeta[:, gp*G:(gp+1)*G, :, :]  = dbeta_temp.reshape((1, G, 1, 1))
+        # dgamma[:, gp*G:(gp+1)*G, :, :] = np.sum(x_ba_group * dout_group, axis = (0, 2, 3))[None, :, None, None]
+        # dbeta [:, gp*G:(gp+1)*G, :, :] = np.sum(dout_group, axis = (0, 2, 3))[None, :, None, None]
+
+        # dx_ba_group = dout_group * gamma[:, gp*G:(gp+1)*G, :, :]
+        # dvar  = np.sum(dx_ba_group * (x - mean_group), axis = (0, 2, 3))[None, :, None, None] * (-1.0/2.0) / (np.sqrt(var_group + eps)*(var_group + eps))
+        # dmean = (np.sum(dx_ba_group, axis=(0, 2, 3))[None, :, None, None] * (-1.0) / (np.sqrt(var_group + eps))) + dvar * np.sum(x - mean_group, axis = (0, 2, 3))[None, :, None, None] * (-2.0) / N
+        # dx[:, gp*G:(gp+1)*G, :, :] = dx_ba_group / np.sqrt(var_group + eps) + dvar * 2 * (x - mean_group) / N + dmean / N
+
+    
     ###########################################################################
     # TODO: Implement the backward pass for spatial group normalization.      #
     # This will be extremely similar to the layer norm implementation.        #
