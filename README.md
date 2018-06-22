@@ -16,11 +16,11 @@ Assignment Solutions of Computer vision CS231n(Spring 2018)
 
 **Assignment 2**
 
-1. Fully-connected Neural Network
-2. Batch Normalization 
-3. Dropout
-4. Convolutional Networks
-5. PyTorch / TensorFlow on CIFAR-10
+1. Fully-connected Neural Network (done!)
+2. Batch Normalization  (done!)
+3. Dropout (done!)
+4. Convolutional Networks (done!)
+5. PyTorch / TensorFlow on CIFAR-10 (done!)
 
 **Assignment 3**
 
