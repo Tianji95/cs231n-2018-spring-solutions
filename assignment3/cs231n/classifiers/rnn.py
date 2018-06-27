@@ -116,6 +116,31 @@ class CaptioningRNN(object):
         W_vocab, b_vocab = self.params['W_vocab'], self.params['b_vocab']
 
         loss, grads = 0.0, {}
+
+        h0, first_cache = affine_forward(features, W_proj, b_proj)
+        second_out, second_cache = word_embedding_forward(captions_in, W_embed)
+        if self.cell_type == 'rnn':
+            third_h, third_cache = rnn_forward (second_out, h0, Wx, Wh, b)
+        elif self.cell_type == 'lstm':
+            third_h, third_cache = lstm_forward(second_out, h0, Wx, Wh, b)
+        
+        forth_out, forth_cache = temporal_affine_forward(third_h, W_vocab, b_vocab)
+        loss, dx = temporal_softmax_loss(forth_out, captions_out, mask)
+
+
+        ###### backword #######
+        dx, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dx, forth_cache)
+
+        if self.cell_type == 'rnn':
+            dx, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dx, third_cache)
+        elif self.cell_type == 'lstm':
+            dx, dh0, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(dx, third_cache)
+        
+        grads['W_embed'] = word_embedding_backward(dx, second_cache)
+        dx, grads['W_proj'], grads['b_proj']= affine_backward(dh0, first_cache)
+
+        
+
         ############################################################################
         # TODO: Implement the forward and backward passes for the CaptioningRNN.   #
         # In the forward pass you will need to do the following:                   #
@@ -180,6 +205,22 @@ class CaptioningRNN(object):
         W_embed = self.params['W_embed']
         Wx, Wh, b = self.params['Wx'], self.params['Wh'], self.params['b']
         W_vocab, b_vocab = self.params['W_vocab'], self.params['b_vocab']
+
+        word_idx = self._start
+        h0       = features.dot(W_proj) + b_proj
+        next_h   = h0
+        next_c   = np.zeros(next_h.shape)
+        for i in range(max_length):
+          x_embed = W_embed[word_idx, :]
+          if self.cell_type == 'rnn':
+            next_h, _ = rnn_step_forward(x_embed, next_h, Wx, Wh, b)
+          elif self.cell_type == 'lstm':
+            next_h, next_c, _ = lstm_step_forward(x_embed, next_h, next_c, Wx, Wh, b)  
+          
+          out = next_h.dot(W_vocab) + b_vocab
+          word_idx = np.argmax(out, axis=1)
+          captions[:, i] = word_idx
+          
 
         ###########################################################################
         # TODO: Implement test-time sampling for the model. You will need to      #
