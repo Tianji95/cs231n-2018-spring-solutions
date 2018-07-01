@@ -294,7 +294,6 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
     - cache: Tuple of values needed for backward pass.
     """
     next_h, next_c, cache = None, None, None
-    N, D = x.shape
     _, H = prev_c.shape
 
     a = x.dot(Wx) + prev_h.dot(Wh) + b
@@ -401,20 +400,22 @@ def lstm_forward(x, h0, Wx, Wh, b):
     """
     h, cache = None, None
 
-    # N, T, D  = x.shape
-    # _, H     = h0.shape
-    # prev_h   = h0
+    N, T, D  = x.shape
+    _, H     = h0.shape
+    prev_h   = h0
+    prev_c   = np.zeros((N, H))
 
-    # h = np.zeros((N, T, H))  
-    # cache = []
+    h = np.zeros((N, T, H))  
+    cache = []
 
-    # for t in range(T):
-    #     next_h, cache_temp = rnn_step_forward(x[:, t, :], prev_h, Wx, Wh, b)
-    #     prev_h = next_h
+    for t in range(T):
+        next_h, next_c, cache_temp = lstm_step_forward(x[:, t, :], prev_h, prev_c, Wx, Wh, b)
+        prev_h = next_h
+        prev_c = next_c
 
-    #     cache.append(cache_temp)
-    #     h[:, t, :] = next_h
-
+        cache.append(cache_temp)
+        h[:, t, :] = next_h
+    
     #############################################################################
     # TODO: Implement the forward pass for an LSTM over an entire timeseries.   #
     # You should use the lstm_step_forward function that you just defined.      #
@@ -443,6 +444,25 @@ def lstm_backward(dh, cache):
     - db: Gradient of biases, of shape (4H,)
     """
     dx, dh0, dWx, dWh, db = None, None, None, None, None
+    N, T, H = dh.shape
+    _, D    = cache[0][0].shape
+
+    dx = np.zeros((N, T, D))
+    dh0 = np.zeros((N, H))
+    dWx = np.zeros((D, 4*H))
+    dWh = np.zeros((H, 4*H))
+    db = np.zeros(4*H)
+    dc = np.zeros(dh[:,0,:].shape)
+
+    for t_temp in range(T):
+        t = T - t_temp - 1
+        dh0 += dh[:, t, :]
+
+        dx[:, t, :], dh0, dc, dWx_temp, dWh_temp, db_temp  = lstm_step_backward(dh0, dc, cache[t])
+
+        dWx += dWx_temp
+        dWh += dWh_temp
+        db  += db_temp
     #############################################################################
     # TODO: Implement the backward pass for an LSTM over an entire timeseries.  #
     # You should use the lstm_step_backward function that you just defined.     #

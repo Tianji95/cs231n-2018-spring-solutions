@@ -216,6 +216,7 @@ class CaptioningRNN(object):
             next_h, _ = rnn_step_forward(x_embed, next_h, Wx, Wh, b)
           elif self.cell_type == 'lstm':
             next_h, next_c, _ = lstm_step_forward(x_embed, next_h, next_c, Wx, Wh, b)  
+
           
           out = next_h.dot(W_vocab) + b_vocab
           word_idx = np.argmax(out, axis=1)

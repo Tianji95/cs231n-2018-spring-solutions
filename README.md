@@ -24,8 +24,8 @@ Assignment Solutions of Computer vision CS231n(Spring 2018)
 
 **Assignment 3**
 
-1. Image Captioning with Vanilla RNNs 
-2. Image Captioning with LSTMs 
-3. Network Visualization: Saliency maps, Class Visualization, and Fooling Images
-4. Style Transfer
-5. Generative Adversarial Networks
+1. Image Captioning with Vanilla RNNs (done!)
+2. Image Captioning with LSTMs (done!)
+3. Network Visualization: Saliency maps, Class Visualization, and Fooling Images(done!)
+4. Style Transfer(done!)
+5. Generative Adversarial Networks(done!)
